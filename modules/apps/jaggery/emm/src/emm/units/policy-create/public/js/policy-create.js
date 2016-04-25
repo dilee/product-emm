@@ -46,7 +46,9 @@ var androidOperationConstants = {
     "ENCRYPT_STORAGE_OPERATION": "encrypt-storage",
     "ENCRYPT_STORAGE_OPERATION_CODE": "ENCRYPT_STORAGE",
     "WIFI_OPERATION": "wifi",
-    "WIFI_OPERATION_CODE": "WIFI"
+    "WIFI_OPERATION_CODE": "WIFI",
+    "VPN_OPERATION": "vpn",
+    "VPN_OPERATION_CODE": "VPN"
 };
 
 // Constants to define Android Operation Constants
@@ -80,7 +82,9 @@ var iosOperationConstants = {
     "APN_OPERATION": "apn",
     "APN_OPERATION_CODE": "APN",
     "CELLULAR_OPERATION": "cellular",
-    "CELLULAR_OPERATION_CODE": "CELLULAR"
+    "CELLULAR_OPERATION_CODE": "CELLULAR",
+    "VPN_OPERATION_CODE": "VPN",
+    "VPN_OPERATION": "vpn"
 };
 
 /**
@@ -337,6 +341,62 @@ validateStep["policy-profile"] = function () {
                         "erroneousFeature": operation
                     };
                     continueToCheckNextInputs = false;
+                }
+
+                // at-last, if the value of continueToCheckNextInputs is still true
+                // this means that no error is found
+                if (continueToCheckNextInputs) {
+                    validationStatus = {
+                        "error": false,
+                        "okFeature": operation
+                    };
+                }
+
+                // updating validationStatusArray with validationStatus
+                validationStatusArray.push(validationStatus);
+            }
+
+            if ($.inArray(androidOperationConstants["VPN_OPERATION_CODE"], configuredOperations) != -1) {
+                // if WIFI is configured
+                operation = androidOperationConstants["VPN_OPERATION"];
+                // initializing continueToCheckNextInputs to true
+                continueToCheckNextInputs = true;
+
+                var serverAddress = $("input#vpn-server-address").val();
+                if (!serverAddress) {
+                    validationStatus = {
+                        "error": true,
+                        "subErrorMsg": "Server address is required. You cannot proceed.",
+                        "erroneousFeature": operation
+                    };
+                    continueToCheckNextInputs = false;
+                }
+
+                if (continueToCheckNextInputs) {
+                    var serverPort = $("input#vpn-server-port").val();
+                    if (!serverPort) {
+                        validationStatus = {
+                            "error": true,
+                            "subErrorMsg": "VPN server port is required. You cannot proceed.",
+                            "erroneousFeature": operation
+                        };
+                        continueToCheckNextInputs = false;
+                    } else if (!$.isNumeric(serverPort)) {
+                        validationStatus = {
+                            "error": true,
+                            "subErrorMsg": "VPN server port requires a number input.",
+                            "erroneousFeature": operation
+                        };
+                        continueToCheckNextInputs = false;
+                    } else if (!inputIsValidAgainstRange(serverPort, 0, 65535)) {
+                        validationStatus = {
+                            "error": true,
+                            "subErrorMsg": "VPN server port is not within the range " +
+                            "of valid port numbers.",
+                            "erroneousFeature": operation
+                        };
+                        continueToCheckNextInputs = false;
+                    }
                 }
 
                 // at-last, if the value of continueToCheckNextInputs is still true
@@ -998,6 +1058,34 @@ validateStep["policy-profile"] = function () {
                 // updating validationStatusArray with validationStatus
                 validationStatusArray.push(validationStatus);
             }
+
+            if ($.inArray(iosOperationConstants["VPN_OPERATION_CODE"], configuredOperations) != -1) {
+                // if WIFI is configured
+                operation = iosOperationConstants["VPN_OPERATION"];
+                // initializing continueToCheckNextInputs to true
+                continueToCheckNextInputs = true;
+
+                var connectionName = $("input#vpn-connection-name").val();
+                if (!connectionName) {
+                    validationStatus = {
+                        "error": true,
+                        "subErrorMsg": "Connection Name is required. You cannot proceed.",
+                        "erroneousFeature": operation
+                    };
+                    continueToCheckNextInputs = false;
+                }
+                // at-last, if the value of continueToCheckNextInputs is still true
+                // this means that no error is found
+                if (continueToCheckNextInputs) {
+                    validationStatus = {
+                        "error": false,
+                        "okFeature": operation
+                    };
+                }
+
+                // updating validationStatusArray with validationStatus
+                validationStatusArray.push(validationStatus);
+            }
             // Validating EMAIL
             if ($.inArray(iosOperationConstants["EMAIL_OPERATION_CODE"], configuredOperations) != -1) {
                 // if EMAIL is configured
@@ -1251,6 +1339,154 @@ validateStep["policy-profile"] = function () {
                 // updating validationStatusArray with validationStatus
                 validationStatusArray.push(validationStatus);
             }
+
+            // Validating Domains
+            if ($.inArray(iosOperationConstants["DOMAIN"], configuredOperations) != -1) {
+                // if DOMAIN is configured
+                operation = iosOperationConstants["DOMAIN"];
+
+                continueToCheckNextInputs = true;
+
+                var airplayCredentialsGridChildInputs = "div#unmarked-email-domains .child-input";
+                var airplayDestinationsGridChildInputs = "div#safari-web-domains .child-input";
+                if ($(airplayCredentialsGridChildInputs).length == 0 &&
+                    $(airplayDestinationsGridChildInputs).length == 0) {
+                    validationStatus = {
+                        "error": true,
+                        "subErrorMsg": "Manage Domains have zero configurations attached.",
+                        "erroneousFeature": operation
+                    };
+                    continueToCheckNextInputs = false;
+                }
+
+                if (continueToCheckNextInputs) {
+                    if ($(airplayCredentialsGridChildInputs).length > 0) {
+                        childInputCount = 0;
+                        childInputArray = [];
+                        emptyChildInputCount = 0;
+                        duplicatesExist = false;
+                        // looping through each child input
+                        $(airplayCredentialsGridChildInputs).each(function () {
+                            childInputCount++;
+                            if (childInputCount % 2 == 1) {
+                                // if child input is of first column
+                                childInput = $(this).val();
+                                childInputArray.push(childInput);
+                                // updating emptyChildInputCount
+                                if (!childInput) {
+                                    // if child input field is empty
+                                    emptyChildInputCount++;
+                                }
+                            }
+                        });
+                        // checking for duplicates
+                        initialChildInputArrayLength = childInputArray.length;
+                        if (emptyChildInputCount == 0 && initialChildInputArrayLength > 1) {
+                            for (m = 0; m < (initialChildInputArrayLength - 1); m++) {
+                                poppedChildInput = childInputArray.pop();
+                                for (n = 0; n < childInputArray.length; n++) {
+                                    if (poppedChildInput == childInputArray[n]) {
+                                        duplicatesExist = true;
+                                        break;
+                                    }
+                                }
+                                if (duplicatesExist) {
+                                    break;
+                                }
+                            }
+                        }
+                        // updating validationStatus
+                        if (emptyChildInputCount > 0) {
+                            // if empty child inputs are present
+                            validationStatus = {
+                                "error": true,
+                                "subErrorMsg": "One or more email domains of " +
+                                "unmarked email domains are empty.",
+                                "erroneousFeature": operation
+                            };
+                            continueToCheckNextInputs = false;
+                        } else if (duplicatesExist) {
+                            // if duplicate input is present
+                            validationStatus = {
+                                "error": true,
+                                "subErrorMsg": "Duplicate values exist with " +
+                                "email domains of unmarked email domains.",
+                                "erroneousFeature": operation
+                            };
+                            continueToCheckNextInputs = false;
+                        }
+                    }
+                }
+
+                if (continueToCheckNextInputs) {
+                    if ($(airplayDestinationsGridChildInputs).length > 0) {
+                        childInputCount = 0;
+                        childInputArray = [];
+                        emptyChildInputCount = 0;
+                        duplicatesExist = false;
+                        // looping through each child input
+                        $(airplayDestinationsGridChildInputs).each(function () {
+                            childInputCount++;
+                            if (childInputCount % 2 == 1) {
+                                // if child input is of first column
+                                childInput = $(this).val();
+                                childInputArray.push(childInput);
+                                // updating emptyChildInputCount
+                                if (!childInput) {
+                                    // if child input field is empty
+                                    emptyChildInputCount++;
+                                }
+                            }
+                        });
+                        // checking for duplicates
+                        initialChildInputArrayLength = childInputArray.length;
+                        if (emptyChildInputCount == 0 && initialChildInputArrayLength > 1) {
+                            for (m = 0; m < (initialChildInputArrayLength - 1); m++) {
+                                poppedChildInput = childInputArray.pop();
+                                for (n = 0; n < childInputArray.length; n++) {
+                                    if (poppedChildInput == childInputArray[n]) {
+                                        duplicatesExist = true;
+                                        break;
+                                    }
+                                }
+                                if (duplicatesExist) {
+                                    break;
+                                }
+                            }
+                        }
+                        // updating validationStatus
+                        if (emptyChildInputCount > 0) {
+                            // if empty child inputs are present
+                            validationStatus = {
+                                "error": true,
+                                "subErrorMsg": "One or more managed safari web domains of " +
+                                "unmarked email domains are empty.",
+                                "erroneousFeature": operation
+                            };
+                            continueToCheckNextInputs = false;
+                        } else if (duplicatesExist) {
+                            // if duplicate input is present
+                            validationStatus = {
+                                "error": true,
+                                "subErrorMsg": "Duplicate values exist with " +
+                                "managed safari web domains of unmarked email domains.",
+                                "erroneousFeature": operation
+                            };
+                            continueToCheckNextInputs = false;
+                        }
+                    }
+                }
+
+                if (continueToCheckNextInputs) {
+                    validationStatus = {
+                        "error": false,
+                        "okFeature": operation
+                    };
+                }
+
+                validationStatusArray.push(validationStatus);
+            }
+
             // Validating LDAP
             if ($.inArray(iosOperationConstants["LDAP_OPERATION_CODE"], configuredOperations) != -1) {
                 // if LDAP is configured
@@ -1876,7 +2112,8 @@ var savePolicy = function (policy, serviceURL) {
 
     $.each(profilePayloads, function (i, item) {
         $.each(item.content, function (key, value) {
-            if (!value) {
+            //cannot add a thruthy check since it will catch value = false as well
+            if (value === null || value === undefined || value === "") {
                 item.content[key] = null;
             }
         });

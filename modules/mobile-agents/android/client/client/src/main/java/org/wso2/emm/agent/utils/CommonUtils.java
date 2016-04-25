@@ -18,6 +18,8 @@
 package org.wso2.emm.agent.utils;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.wso2.emm.agent.AndroidAgentException;
@@ -44,7 +46,6 @@ import android.util.Log;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.wso2.emm.agent.services.Operation;
 import org.wso2.emm.agent.services.PolicyOperationsMapper;
 import org.wso2.emm.agent.services.PolicyRevokeHandler;
 
@@ -78,13 +79,22 @@ public class CommonUtils {
 			apiUtilities.setRequestParams(requestParams);
 		}
 		APIController apiController;
-		String clientKey = Preference.getString(context, Constants.CLIENT_ID);
-		String clientSecret = Preference.getString(context, Constants.CLIENT_SECRET);
-		if (utils.getHostFromPreferences(context) != null && !utils.getHostFromPreferences(context).isEmpty() &&
-		    clientKey != null && !clientKey.isEmpty() && !clientSecret.isEmpty()) {
-			apiController = new APIController(clientKey, clientSecret);
-			apiController.invokeAPI(apiUtilities, apiResultCallBack, requestCode,
-					context.getApplicationContext());
+
+		if (org.wso2.emm.agent.proxy.utils.Constants.Authenticator.AUTHENTICATOR_IN_USE.
+				equals(org.wso2.emm.agent.proxy.utils.Constants.Authenticator.
+						       MUTUAL_SSL_AUTHENTICATOR)) {
+			apiController = new APIController();
+			apiController.securedNetworkCall(apiResultCallBack, requestCode, apiUtilities, context);
+		} else {
+			String clientKey = Preference.getString(context, Constants.CLIENT_ID);
+			String clientSecret = Preference.getString(context, Constants.CLIENT_SECRET);
+			if (utils.getHostFromPreferences(context) != null
+			    && !utils.getHostFromPreferences(context).isEmpty() &&
+			    clientKey != null && !clientKey.isEmpty() && !clientSecret.isEmpty()) {
+				apiController = new APIController(clientKey, clientSecret);
+				apiController.invokeAPI(apiUtilities, apiResultCallBack, requestCode,
+				                        context.getApplicationContext());
+			}
 		}
 
 	}
@@ -102,22 +112,16 @@ public class CommonUtils {
 			Resources resources = context.getResources();
 			SharedPreferences mainPref = context.getSharedPreferences(Constants.PACKAGE_NAME, Context.MODE_PRIVATE);
 			Editor editor = mainPref.edit();
-			editor.putString(context.getResources().getString(R.string.shared_pref_policy),
-			                 resources.getString(R.string.shared_pref_default_string));
-			editor.putString(context.getResources().getString(R.string.shared_pref_isagreed),
-			                 resources.getString(R.string.shared_pref_reg_fail));
-			editor.putString(context.getResources().getString(R.string.shared_pref_regId),
-			                 resources.getString(R.string.shared_pref_default_string));
-			editor.putString(context.getResources().getString(R.string.shared_pref_registered),
-			                 resources.getString(R.string.shared_pref_reg_fail));
-			editor.putString(context.getResources().getString(R.string.shared_pref_ip),
-			                 resources.getString(R.string.shared_pref_default_string));
+			editor.putBoolean(Constants.PreferenceFlag.IS_AGREED, false);
+			editor.putString(Constants.PreferenceFlag.REG_ID, null);
+			editor.putBoolean(Constants.PreferenceFlag.REGISTERED, false);
+			editor.putString(Constants.PreferenceFlag.IP, null);
+			editor.putString(Constants.PreferenceFlag.NOTIFIER_TYPE, null);
 			editor.putString(context.getResources().getString(R.string.shared_pref_sender_id),
 			                 resources.getString(R.string.shared_pref_default_string));
 			editor.putString(context.getResources().getString(R.string.shared_pref_eula),
 			                 resources.getString(R.string.shared_pref_default_string));
-			editor.putString(resources.getString(R.string.shared_pref_device_active),
-			                 resources.getString(R.string.shared_pref_reg_fail));
+			editor.putBoolean(Constants.PreferenceFlag.DEVICE_ACTIVE, false);
 			editor.commit();
 			Preference.clearPreferences(context);
 			clearClientCredentials(context);
@@ -165,21 +169,37 @@ public class CommonUtils {
 	 * @throws AndroidAgentException
 	 */
 	public static void unRegisterClientApp(Context context) throws AndroidAgentException {
-		String applicationName = Preference.getString(context, Constants.CLIENT_NAME);
-		String consumerKey = Preference.getString(context, Constants.CLIENT_ID);
-		String userId = Preference.getString(context, Constants.USERNAME);
+		String serverIP = Preference.getString(context, Constants.PreferenceFlag.IP);
 
-		UnregisterProfile profile = new UnregisterProfile();
-		profile.setApplicationName(applicationName);
-		profile.setConsumerKey(consumerKey);
-		profile.setUserId(userId);
+		if (serverIP != null && !serverIP.isEmpty()) {
+			String applicationName = Preference.getString(context, Constants.CLIENT_NAME);
+			String consumerKey = Preference.getString(context, Constants.CLIENT_ID);
+			String userId = Preference.getString(context, Constants.USERNAME);
 
-		String serverIP = Preference.getString(context, Constants.IP);
-		ServerConfig utils = new ServerConfig();
-		utils.setServerIP(serverIP);
+			if (applicationName != null && !applicationName.isEmpty() &&
+			    consumerKey != null && !consumerKey.isEmpty() &&
+			    userId != null && !userId.isEmpty()) {
 
-		DynamicClientManager dynamicClientManager = new DynamicClientManager();
-		dynamicClientManager.unregisterClient(profile,utils, context);
+				UnregisterProfile profile = new UnregisterProfile();
+				profile.setApplicationName(applicationName);
+				profile.setConsumerKey(consumerKey);
+				profile.setUserId(userId);
+
+				ServerConfig utils = new ServerConfig();
+				utils.setServerIP(serverIP);
+
+				DynamicClientManager dynamicClientManager = new DynamicClientManager();
+				boolean isUnregistered = dynamicClientManager.unregisterClient(profile, utils, context);
+
+				if (!isUnregistered) {
+					Log.e(TAG, "Error occurred while removing the OAuth client app");
+				}
+			} else {
+				Log.e(TAG, "Client credential is not available");
+			}
+		} else {
+			Log.e(TAG, "There is no valid IP to contact the server");
+		}
 	}
 
 	/**
@@ -188,6 +208,7 @@ public class CommonUtils {
 	 */
 	public static void disableAdmin(Context context) {
 		DevicePolicyManager devicePolicyManager;
+
 		ComponentName demoDeviceAdmin;
 		devicePolicyManager = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 		demoDeviceAdmin = new ComponentName(context, AgentDeviceAdminReceiver.class);
@@ -199,9 +220,7 @@ public class CommonUtils {
 	 * @param context - Application context.
 	 */
 	public static void revokePolicy(Context context) throws AndroidAgentException {
-		Resources resources = context.getResources();
-		String payload = Preference.getString(context, resources.getString(R.string.shared_pref_policy_applied));
-
+		String payload = Preference.getString(context, Constants.PreferenceFlag.APPLIED_POLICY);
 		PolicyOperationsMapper operationsMapper = new PolicyOperationsMapper();
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -219,8 +238,7 @@ public class CommonUtils {
 					op = operationsMapper.getOperation(op);
 					revokeHandler.revokeExistingPolicy(op);
 				}
-
-				Preference.putString(context, resources.getString(R.string.shared_pref_policy_applied), null);
+				Preference.putString(context, Constants.PreferenceFlag.APPLIED_POLICY, null);
 			}
 		} catch (IOException e) {
 			throw new AndroidAgentException("Error occurred while parsing stream", e);
@@ -245,16 +263,46 @@ public class CommonUtils {
 	 * @param operation - Operation code.
 	 * @param command - Shell command to be executed.
 	 */
-	public static void callSystemApp(Context context, String operation, String command) {
+	public static void callSystemApp(Context context, String operation, String command, String appUri) {
 		if(Constants.SYSTEM_APP_ENABLED) {
-			Intent intent = new Intent(Constants.SYSTEM_APP_SERVICE_NAME);
+			Intent intent =  new Intent(Constants.SYSTEM_APP_SERVICE_NAME);
+			intent = createExplicitFromImplicitIntent(context,intent);
 			intent.putExtra("code", operation);
+			intent.setPackage(Constants.PACKAGE_NAME);
 			if (command != null) {
 				intent.putExtra("command", command);
+			}
+			if (appUri != null) {
+				intent.putExtra("appUri", appUri);
 			}
 			context.startService(intent);
 		} else {
 			Log.e(TAG, "System app not enabled.");
 		}
+	}
+
+	public static Intent createExplicitFromImplicitIntent(Context context, Intent implicitIntent) {
+		//Retrieve all services that can match the given intent
+		PackageManager pm = context.getPackageManager();
+		List<ResolveInfo> resolveInfo = pm.queryIntentServices(implicitIntent, 0);
+
+		//Make sure only one match was found
+		if (resolveInfo == null || resolveInfo.size() != 1) {
+			return null;
+		}
+
+		//Get component info and create ComponentName
+		ResolveInfo serviceInfo = resolveInfo.get(0);
+		String packageName = serviceInfo.serviceInfo.packageName;
+		String className = serviceInfo.serviceInfo.name;
+		ComponentName component = new ComponentName(packageName, className);
+
+		//Create a new intent. Use the old one for extras and such reuse
+		Intent explicitIntent = new Intent(implicitIntent);
+
+		//Set the component to be explicit
+		explicitIntent.setComponent(component);
+
+		return explicitIntent;
 	}
 }

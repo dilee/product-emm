@@ -173,6 +173,20 @@
     </Permission>
 
     <Permission>
+        <name>View device</name>
+        <path>/device-mgt/emm-admin/devices/view</path>
+        <url>/devices/users/*</url>
+        <method>GET</method>
+    </Permission>
+
+    <Permission>
+        <name>View device</name>
+        <path>/device-mgt/emm-admin/devices/view</path>
+        <url>/devices/roles/*</url>
+        <method>GET</method>
+    </Permission>
+
+    <Permission>
         <name>List devices</name>
         <path>/device-mgt/emm-admin/devices/list</path>
         <url>/devices/count</url>
@@ -772,6 +786,25 @@
     </Permission>
     <!-- End of Profile related APIs -->
 
+    <!--Start of the device search and information -->
+
+    <Permission>
+        <name>Device Information</name>
+        <path>/device-mgt/emm-admin/information/get</path>
+        <url>/information/*/*</url>
+        <method>GET</method>
+    </Permission>
+
+    <Permission>
+        <name>Device Search</name>
+        <path>/device-mgt/emm-admin/search</path>
+        <url>/search</url>
+        <method>POST</method>
+    </Permission>
+
+    <!--End of the device search and information -->
+
+
     <!-- License related APIs -->
     <!--<Permission>-->
     <!--<name>Get license</name>-->
@@ -810,6 +843,82 @@
         <url>/configuration</url>
         <method>PUT</method>
     </Permission>
+
     <!-- End of Configuration related APIs -->
 
+    <!-- Certificate related APIs -->
+    <Permission>
+        <name>Save certificate in the database</name>
+        <path>/device-mgt/emm-admin/certificate/save</path>
+        <url>/certificates</url>
+        <method>POST</method>
+        <scope>emm_admin</scope>
+    </Permission>
+    <Permission>
+        <name>get certificate in the database</name>
+        <path>/device-mgt/emm-admin/certificate/Get</path>
+        <url>/certificates/*</url>
+        <method>GET</method>
+        <scope>emm_admin</scope>
+    </Permission>
+    <Permission>
+        <name>get certificate in the database</name>
+        <path>/device-mgt/emm-admin/certificate/GetAll</path>
+        <url>/certificates</url>
+        <method>GET</method>
+        <scope>emm_admin</scope>
+    </Permission>
+    <Permission>
+        <name>get certificate in the database</name>
+        <path>/device-mgt/emm-admin/certificate/Get</path>
+        <url>/certificates/*</url>
+        <method>DELETE</method>
+        <scope>emm_admin</scope>
+    </Permission>
+    <!-- End of Certificate related APIs -->
+
+    <!-- Dashboard related APIs -->
+    <!--<Permission>-->
+        <!--<name>Get non-compliant device count</name>-->
+        <!--<path>/device-mgt/emm-admin/dashboard/non-compliant-device-count/Get</path>-->
+        <!--<url>/dashboard/non-compliant</url>-->
+        <!--<method>GET</method>-->
+        <!--<scope>emm_admin</scope>-->
+    <!--</Permission>-->
+    <!--<Permission>-->
+        <!--<name>get un-monitored device count</name>-->
+        <!--<path>/device-mgt/emm-admin/dashboard/un-monitored-device-count/Get</path>-->
+        <!--<url>/dashboard/un-monitored</url>-->
+        <!--<method>GET</method>-->
+        <!--<scope>emm_admin</scope>-->
+    <!--</Permission>-->
+    <Permission>
+        <name>get overview of device counts</name>
+        <path>/device-mgt/emm-admin/dashboard/device-overview</path>
+        <url>/dashboard/device-overview</url>
+        <method>GET</method>
+        <scope>emm_admin</scope>
+    </Permission>
+    <Permission>
+        <name>get vulnerable device counts</name>
+        <path>/device-mgt/emm-admin/dashboard/potential-vulnerabilities</path>
+        <url>/dashboard/potential-vulnerabilities</url>
+        <method>GET</method>
+        <scope>emm_admin</scope>
+    </Permission>
+    <Permission>
+        <name>get non-compliant device counts by features</name>
+        <path>/device-mgt/emm-admin/dashboard/non-compliant-by-feature</path>
+        <url>/dashboard/non-compliant-by-feature</url>
+        <method>GET</method>
+        <scope>emm_admin</scope>
+    </Permission>
+    <Permission>
+        <name>get device counts by groupings</name>
+        <path>/device-mgt/emm-admin/dashboard/device-groupings</path>
+        <url>/dashboard/device-groupings</url>
+        <method>GET</method>
+        <scope>emm_admin</scope>
+    </Permission>
+    <!-- End of Dashboard related APIs -->
 </PermissionConfiguration>

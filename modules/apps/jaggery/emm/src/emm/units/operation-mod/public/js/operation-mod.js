@@ -37,12 +37,48 @@ var operationModule = function () {
     // Constants to define Android Operation Constants
     var androidOperationConstants = {
         "PASSCODE_POLICY_OPERATION_CODE": "PASSCODE_POLICY",
+        "VPN_OPERATION_CODE": "VPN",
         "CAMERA_OPERATION_CODE": "CAMERA",
         "ENCRYPT_STORAGE_OPERATION_CODE": "ENCRYPT_STORAGE",
         "WIFI_OPERATION_CODE": "WIFI",
         "WIPE_OPERATION_CODE": "WIPE_DATA",
         "NOTIFICATION_OPERATION_CODE": "NOTIFICATION",
-        "CHANGE_LOCK_CODE_OPERATION_CODE": "CHANGE_LOCK_CODE"
+        "CHANGE_LOCK_CODE_OPERATION_CODE": "CHANGE_LOCK_CODE",
+        "LOCK_OPERATION_CODE": "DEVICE_LOCK",
+        "UPGRADE_FIRMWARE": "UPGRADE_FIRMWARE",
+        "DISALLOW_ADJUST_VOLUME": "DISALLOW_ADJUST_VOLUME",
+        "DISALLOW_CONFIG_BLUETOOTH" : "DISALLOW_CONFIG_BLUETOOTH",
+        "DISALLOW_CONFIG_CELL_BROADCASTS" : "DISALLOW_CONFIG_CELL_BROADCASTS",
+        "DISALLOW_CONFIG_CREDENTIALS" : "DISALLOW_CONFIG_CREDENTIALS",
+        "DISALLOW_CONFIG_MOBILE_NETWORKS" : "DISALLOW_CONFIG_MOBILE_NETWORKS",
+        "DISALLOW_CONFIG_TETHERING" : "DISALLOW_CONFIG_TETHERING",
+        "DISALLOW_CONFIG_VPN" : "DISALLOW_CONFIG_VPN",
+        "DISALLOW_CONFIG_WIFI" : "DISALLOW_CONFIG_WIFI",
+        "DISALLOW_APPS_CONTROL" : "DISALLOW_APPS_CONTROL",
+        "DISALLOW_CREATE_WINDOWS" : "DISALLOW_CREATE_WINDOWS",
+        "DISALLOW_CROSS_PROFILE_COPY_PASTE" : "DISALLOW_CROSS_PROFILE_COPY_PASTE",
+        "DISALLOW_DEBUGGING_FEATURES" : "DISALLOW_DEBUGGING_FEATURES",
+        "DISALLOW_FACTORY_RESET" : "DISALLOW_FACTORY_RESET",
+        "DISALLOW_ADD_USER" : "DISALLOW_ADD_USER",
+        "DISALLOW_INSTALL_APPS" : "DISALLOW_INSTALL_APPS",
+        "DISALLOW_INSTALL_UNKNOWN_SOURCES" : "DISALLOW_INSTALL_UNKNOWN_SOURCES",
+        "DISALLOW_MODIFY_ACCOUNTS" : "DISALLOW_MODIFY_ACCOUNTS",
+        "DISALLOW_MOUNT_PHYSICAL_MEDIA" : "DISALLOW_MOUNT_PHYSICAL_MEDIA",
+        "DISALLOW_NETWORK_RESET" : "DISALLOW_NETWORK_RESET",
+        "DISALLOW_OUTGOING_BEAM" : "DISALLOW_OUTGOING_BEAM",
+        "DISALLOW_OUTGOING_CALLS" : "DISALLOW_OUTGOING_CALLS",
+        "DISALLOW_REMOVE_USER" : "DISALLOW_REMOVE_USER",
+        "DISALLOW_SAFE_BOOT" : "DISALLOW_SAFE_BOOT",
+        "DISALLOW_SHARE_LOCATION" : "DISALLOW_SHARE_LOCATION",
+        "DISALLOW_SMS" : "DISALLOW_SMS",
+        "DISALLOW_UNINSTALL_APPS" : "DISALLOW_UNINSTALL_APPS",
+        "DISALLOW_UNMUTE_MICROPHONE" : "DISALLOW_UNMUTE_MICROPHONE",
+        "DISALLOW_USB_FILE_TRANSFER" : "DISALLOW_USB_FILE_TRANSFER",
+        "ALLOW_PARENT_PROFILE_APP_LINKING" : "ALLOW_PARENT_PROFILE_APP_LINKING",
+        "ENSURE_VERIFY_APPS" : "ENSURE_VERIFY_APPS",
+        "AUTO_TIME" : "AUTO_TIME",
+        "SET_SCREEN_CAPTURE_DISABLED" : "SET_SCREEN_CAPTURE_DISABLED",
+        "SET_STATUS_BAR_DISABLED" : "SET_STATUS_BAR_DISABLED"
     };
 
     // Constants to define Windows Operation Constants
@@ -58,6 +94,7 @@ var operationModule = function () {
     var iosOperationConstants = {
         "PASSCODE_POLICY_OPERATION_CODE": "PASSCODE_POLICY",
         "RESTRICTIONS_OPERATION_CODE": "RESTRICTION",
+        "VPN_OPERATION_CODE": "VPN",
         "WIFI_OPERATION_CODE": "WIFI",
         "EMAIL_OPERATION_CODE": "EMAIL",
         "AIRPLAY_OPERATION_CODE": "AIR_PLAY",
@@ -66,12 +103,14 @@ var operationModule = function () {
         "NOTIFICATION_OPERATION_CODE": "NOTIFICATION",
         "CALENDAR_SUBSCRIPTION_OPERATION_CODE": "CALENDAR_SUBSCRIPTION",
         "APN_OPERATION_CODE": "APN",
+        "DOMAIN_CODE": "DOMAIN",
         "CELLULAR_OPERATION_CODE": "CELLULAR"
     };
 
     publicMethods.getIOSServiceEndpoint = function (operationCode) {
         var featureMap = {
             "DEVICE_LOCK": "lock",
+            "VPN": "vpn",
             "RING": "ring",
             "LOCATION": "location",
             "NOTIFICATION": "notification",
@@ -180,6 +219,60 @@ var operationModule = function () {
                     "restrictionsAllowSpellCheck": operationPayload["allowSpellCheck"],
                     "restrictionsSafariAcceptCookies": operationPayload["safariAcceptCookies"],
                     "restrictionsAutonomousSingleAppModePermittedAppIDs": operationPayload["autonomousSingleAppModePermittedAppIDs"]
+                };
+                break;
+            case iosOperationConstants["VPN_OPERATION_CODE"]:
+                var pptp = false;
+                var l2tp = false;
+                if (operationPayload["vpnType"] == "PPTP") {
+                    pptp = true;
+                } else if (operationPayload["vpnType"] == "L2TP") {
+                    l2tp = true;
+                }
+
+                payload = {
+                    "userDefinedName": operationPayload["userDefinedName"],
+                    "overridePrimary": operationPayload["overridePrimary"],
+                    "onDemandEnabled": operationPayload["onDemandEnabled"],
+                    "onDemandMatchDomainsAlways": operationPayload["onDemandMatchDomainsAlways"],
+                    "onDemandMatchDomainsNever": operationPayload["onDemandMatchDomainsNever"],
+                    "onDemandMatchDomainsOnRetry": operationPayload["onDemandMatchDomainsOnRetry"],
+                    "onDemandRules": operationPayload["onDemandRules"],
+                    "vendorConfigs": operationPayload["vendorConfigs"],
+                    "vpnType": operationPayload["vpnType"],
+                    "pptpAuthName": pptp ? operationPayload.ppp["authName"] : "",
+                    "pptpTokenCard": pptp ? operationPayload.ppp["tokenCard"] : "",
+                    "pptpAuthPassword": pptp ? operationPayload.ppp["authPassword"] : "",
+                    "pptpCommRemoteAddress": pptp ? operationPayload.ppp["commRemoteAddress"] : "",
+                    "pptpRSASecureID": pptp ? operationPayload.ppp["RSASecureID"] : "",
+                    "pptpCCPEnabled": pptp ? operationPayload.ppp["CCPEnabled"] : "",
+                    "pptpCCPMPPE40Enabled": pptp ? operationPayload.ppp["CCPMPPE40Enabled"] : "",
+                    "pptpCCPMPPE128Enabled": pptp ? operationPayload.ppp["CCPMPPE128Enabled"] : "",
+                    "l2tpAuthName": l2tp ? operationPayload.ppp["authName"] : "",
+                    "l2tpTokenCard": l2tp ? operationPayload.ppp["tokenCard"] : "",
+                    "l2tpAuthPassword": l2tp ? operationPayload.ppp["authPassword"] : "",
+                    "l2tpCommRemoteAddress": l2tp ? operationPayload.ppp["commRemoteAddress"] : "",
+                    "l2tpRSASecureID": l2tp ? operationPayload.ppp["RSASecureID"] : "",
+                    "ipsecRemoteAddress": operationPayload.ipSec["remoteAddress"],
+                    "ipsecAuthenticationMethod": operationPayload.ipSec["authenticationMethod"],
+                    "ipsecLocalIdentifier": operationPayload.ipSec["localIdentifier"],
+                    "ipsecSharedSecret": operationPayload.ipSec["sharedSecret"],
+                    "ipsecPayloadCertificateUUID": operationPayload.ipSec["payloadCertificateUUID"],
+                    "ipsecXAuthEnabled": operationPayload.ipSec["XAuthEnabled"],
+                    "ipsecXAuthName": operationPayload.ipSec["XAuthName"],
+                    "ipsecPromptForVPNPIN": operationPayload.ipSec["promptForVPNPIN"],
+                    "ikev2RemoteAddress": operationPayload.ikEv2["remoteAddress"],
+                    "ikev2LocalIdentifier": operationPayload.ikEv2["localIdentifier"],
+                    "ikev2RemoteIdentifier": operationPayload.ikEv2["remoteIdentifier"],
+                    "ikev2AuthenticationMethod": operationPayload.ikEv2["authenticationMethod"],
+                    "ikev2SharedSecret": operationPayload.ikEv2["sharedSecret"],
+                    "ikev2PayloadCertificateUUID": operationPayload.ikEv2["payloadCertificateUUID"],
+                    "ikev2ExtendedAuthEnabled": operationPayload.ikEv2["extendedAuthEnabled"],
+                    "ikev2AuthName": operationPayload.ikEv2["authName"],
+                    "ikev2AuthPassword": operationPayload.ikEv2["authPassword"],
+                    "ikev2DeadPeerDetectionInterval": operationPayload.ikEv2["deadPeerDetectionInterval"],
+                    "ikev2ServerCertificateIssuerCommonName": operationPayload.ikEv2["serverCertificateIssuerCommonName"],
+                    "ikev2ServerCertificateCommonName": operationPayload.ikEv2["serverCertificateCommonName"]
                 };
                 break;
             case iosOperationConstants["WIFI_OPERATION_CODE"]:
@@ -367,6 +460,75 @@ var operationModule = function () {
                     }
                 };
                 break;
+            case iosOperationConstants["VPN_OPERATION_CODE"]:
+                operationType = operationTypeConstants["PROFILE"];
+                var ppp = {};
+                var ipSec = {};
+                var ikev2 = {};
+                if (operationData["vpnType"] == "PPTP") {
+                    ppp = {
+                        "authName": operationData["pptpAuthName"],
+                        "tokenCard": operationData["pptpTokenCard"],
+                        "authPassword": operationData["pptpAuthPassword"],
+                        "commRemoteAddress": operationData["pptpCommRemoteAddress"],
+                        "RSASecureID": operationData["pptpRSASecureID"],
+                        "CCPEnabled": operationData["pptpCCPEnabled"],
+                        "CCPMPPE40Enabled": operationData["pptpCCPMPPE40Enabled"],
+                        "CCPMPPE128Enabled": operationData["pptpCCPMPPE128Enabled"]
+                    };
+                } else if (operationData["vpnType"] == "L2TP") {
+                    ppp = {
+                        "authName": operationData["l2tpAuthName"],
+                        "tokenCard": operationData["l2tpTokenCard"],
+                        "authPassword": operationData["l2tpAuthPassword"],
+                        "commRemoteAddress": operationData["l2tpCommRemoteAddress"],
+                        "RSASecureID": operationData["l2tpRSASecureID"]
+                    };
+                } else if (operationData["vpnType"] == "IPSec") {
+                    ipSec = {
+                        "remoteAddress" : operationData["ipsecRemoteAddress"],
+                        "authenticationMethod" : operationData["ipsecAuthenticationMethod"],
+                        "localIdentifier" : operationData["ipsecLocalIdentifier"],
+                        "sharedSecret" : operationData["ipsecSharedSecret"],
+                        "payloadCertificateUUID" : operationData["ipsecPayloadCertificateUUID"],
+                        "XAuthEnabled" : operationData["ipsecXAuthEnabled"],
+                        "XAuthName" : operationData["ipsecXAuthName"],
+                        "promptForVPNPIN" : operationData["ipsecPromptForVPNPIN"]
+                    };
+                } else if (operationData["vpnType"] == "IKEv2") {
+                    ikev2 = {
+                        "remoteAddress" : operationData["ikev2RemoteAddress"],
+                        "localIdentifier" : operationData["ikev2LocalIdentifier"],
+                        "remoteIdentifier" : operationData["ikev2RemoteIdentifier"],
+                        "authenticationMethod" : operationData["ikev2AuthenticationMethod"],
+                        "sharedSecret" : operationData["ikev2SharedSecret"],
+                        "payloadCertificateUUID" : operationData["ikev2PayloadCertificateUUID"],
+                        "extendedAuthEnabled" : operationData["ikev2ExtendedAuthEnabled"],
+                        "authName" : operationData["ikev2AuthName"],
+                        "authPassword" : operationData["ikev2AuthPassword"],
+                        "deadPeerDetectionInterval" : operationData["ikev2DeadPeerDetectionInterval"],
+                        "serverCertificateIssuerCommonName" : operationData["ikev2ServerCertificateIssuerCommonName"],
+                        "serverCertificateCommonName" : operationData["ikev2ServerCertificateCommonName"]
+                    };
+                }
+
+                payload = {
+                    "operation": {
+                        "userDefinedName": operationData["userDefinedName"],
+                        "overridePrimary": operationData["overridePrimary"],
+                        "onDemandEnabled": operationData["onDemandEnabled"],
+                        "onDemandMatchDomainsAlways": operationData["onDemandMatchDomainsAlways"],
+                        "onDemandMatchDomainsNever": operationData["onDemandMatchDomainsNever"],
+                        "onDemandMatchDomainsOnRetry": operationData["onDemandMatchDomainsOnRetry"],
+                        "onDemandRules" : operationData["onDemandRules"],
+                        "vendorConfigs" : operationData["vendorConfigs"],
+                        "vpnType" : operationData["vpnType"],
+                        "ppp": ppp,
+                        "ipSec": ipSec,
+                        "ikEv2": ikev2
+                    }
+                };
+                break;
             case iosOperationConstants["RESTRICTIONS_OPERATION_CODE"]:
                 operationType = operationTypeConstants["PROFILE"];
                 payload = {
@@ -528,6 +690,15 @@ var operationModule = function () {
                     }
                 };
                 break;
+            case iosOperationConstants["DOMAIN_CODE"]:
+                operationType = operationTypeConstants["PROFILE"];
+                payload = {
+                    "operation": {
+                        "emailDomains": operationData["emailDomains"],
+                        "webDomains": operationData["webDomains"]
+                    }
+                };
+                break;
             case iosOperationConstants["CELLULAR_OPERATION_CODE"]:
                 operationType = operationTypeConstants["PROFILE"];
                 payload = {
@@ -584,9 +755,7 @@ var operationModule = function () {
                 };
                 break;
             case androidOperationConstants["CAMERA_OPERATION_CODE"]:
-                payload = {
-                    "cameraEnabled": operationPayload["enabled"]
-                };
+                payload = operationPayload;
                 break;
             case androidOperationConstants["ENCRYPT_STORAGE_OPERATION_CODE"]:
                 payload = {
@@ -597,6 +766,14 @@ var operationModule = function () {
                 payload = {
                     "wifiSSID": operationPayload["ssid"],
                     "wifiPassword": operationPayload["password"]
+                };
+                break;
+            case androidOperationConstants["VPN_OPERATION_CODE"]:
+                payload = {
+                    "serverAddress": operationPayload["serverAddress"],
+                    "serverPort": operationPayload["serverPort"],
+                    "sharedSecret": operationPayload["sharedSecret"],
+                    "dnsServer": operationPayload["dnsServer"]
                 };
                 break;
         }
@@ -611,7 +788,40 @@ var operationModule = function () {
                 operationType = operationTypeConstants["PROFILE"];
                 payload = {
                     "operation": {
-                        "enabled" : operationData["cameraEnabled"]
+                        "CAMERA" : operationData["cameraEnabled"],
+                        "DISALLOW_ADJUST_VOLUME" : operationData["disallowAdjustVolumeEnabled"],
+                        "DISALLOW_CONFIG_BLUETOOTH" : operationData["disallowConfigBluetooth"],
+                        "DISALLOW_CONFIG_CELL_BROADCASTS" : operationData["disallowConfigCellBroadcasts"],
+                        "DISALLOW_CONFIG_CREDENTIALS" : operationData["disallowConfigCredentials"],
+                        "DISALLOW_CONFIG_MOBILE_NETWORKS" : operationData["disallowConfigMobileNetworks"],
+                        "DISALLOW_CONFIG_TETHERING" : operationData["disallowConfigTethering"],
+                        "DISALLOW_CONFIG_VPN" : operationData["disallowConfigVpn"],
+                        "DISALLOW_CONFIG_WIFI" : operationData["disallowConfigWifi"],
+                        "DISALLOW_APPS_CONTROL" : operationData["disallowAppControl"],
+                        "DISALLOW_CREATE_WINDOWS" : operationData["disallowCreateWindows"],
+                        "DISALLOW_CROSS_PROFILE_COPY_PASTE" : operationData["disallowCrossProfileCopyPaste"],
+                        "DISALLOW_DEBUGGING_FEATURES" : operationData["disallowDebugging"],
+                        "DISALLOW_FACTORY_RESET" : operationData["disallowFactoryReset"],
+                        "DISALLOW_ADD_USER" : operationData["disallowAddUser"],
+                        "DISALLOW_INSTALL_APPS" : operationData["disallowInstallApps"],
+                        "DISALLOW_INSTALL_UNKNOWN_SOURCES" : operationData["disallowInstallUnknownSources"],
+                        "DISALLOW_MODIFY_ACCOUNTS" : operationData["disallowModifyAccounts"],
+                        "DISALLOW_MOUNT_PHYSICAL_MEDIA" : operationData["disallowMountPhysicalMedia"],
+                        "DISALLOW_NETWORK_RESET" : operationData["disallowNetworkReset"],
+                        "DISALLOW_OUTGOING_BEAM" : operationData["disallowOutgoingBeam"],
+                        "DISALLOW_OUTGOING_CALLS" : operationData["disallowOutgoingCalls"],
+                        "DISALLOW_REMOVE_USER" : operationData["disallowRemoveUser"],
+                        "DISALLOW_SAFE_BOOT" : operationData["disallowSafeBoot"],
+                        "DISALLOW_SHARE_LOCATION" : operationData["disallowLocationSharing"],
+                        "DISALLOW_SMS" : operationData["disallowSMS"],
+                        "DISALLOW_UNINSTALL_APPS" : operationData["disallowUninstallApps"],
+                        "DISALLOW_UNMUTE_MICROPHONE" : operationData["disallowUnmuteMicrophone"],
+                        "DISALLOW_USB_FILE_TRANSFER" : operationData["disallowUSBFileTransfer"],
+                        "ALLOW_PARENT_PROFILE_APP_LINKING" : operationData["disallowParentProfileAppLinking"],
+                        "ENSURE_VERIFY_APPS" : operationData["ensureVerifyApps"],
+                        "AUTO_TIME" : operationData["enableAutoTime"],
+                        "SET_SCREEN_CAPTURE_DISABLED" : operationData["diableScreenCapture"],
+                        "SET_STATUS_BAR_DISABLED" : operationData["disableStatusBar"]
                     }
                 };
                 break;
@@ -639,6 +849,14 @@ var operationModule = function () {
                     }
                 };
                 break;
+            case androidOperationConstants["UPGRADE_FIRMWARE"]:
+                operationType = operationTypeConstants["PROFILE"];
+                payload = {
+                    "operation": {
+                        "schedule" : operationData["schedule"]
+                    }
+                };
+                break;
             case androidOperationConstants["WIPE_OPERATION_CODE"]:
                 operationType = operationTypeConstants["PROFILE"];
                 payload = {
@@ -653,6 +871,26 @@ var operationModule = function () {
                     "operation": {
                         "ssid": operationData["wifiSSID"],
                         "password": operationData["wifiPassword"]
+                    }
+                };
+                break;
+            case androidOperationConstants["VPN_OPERATION_CODE"]:
+                operationType = operationTypeConstants["PROFILE"];
+                payload = {
+                    "operation": {
+                        "serverAddress": operationData["serverAddress"],
+                        "serverPort": operationData["serverPort"],
+                        "sharedSecret": operationData["sharedSecret"],
+                        "dnsServer": operationData["dnsServer"]
+                    }
+                };
+                break;
+            case androidOperationConstants["LOCK_OPERATION_CODE"]:
+                operationType = operationTypeConstants["PROFILE"];
+                payload = {
+                    "operation": {
+                        "message" : operationData["lock-message"],
+                        "isHardLockEnabled" : operationData["hard-lock"]
                     }
                 };
                 break;
@@ -688,7 +926,9 @@ var operationModule = function () {
         var featureMap = {
             "WIFI": "wifi",
             "CAMERA": "camera",
+            "VPN": "vpn",
             "DEVICE_LOCK": "lock",
+            "DEVICE_UNLOCK": "unlock",
             "DEVICE_LOCATION": "location",
             "CLEAR_PASSWORD": "clear-password",
             "APPLICATION_LIST": "get-application-list",
@@ -852,9 +1092,10 @@ var operationModule = function () {
             "DEVICE_RING": "fw-dial-up",
             "DEVICE_REBOOT": "fw-refresh",
             "UPGRADE_FIRMWARE": "fw-up-arrow",
-            "DEVICE_MUTE": "fw-incoming-call",
+            "DEVICE_MUTE": "fw-mute",
             "NOTIFICATION": "fw-message",
-            "CHANGE_LOCK_CODE": "fw-security"
+            "CHANGE_LOCK_CODE": "fw-security",
+            "DEVICE_UNLOCK": "fw-lock"
         };
         return featureMap[operationCode];
     };
@@ -1013,6 +1254,7 @@ var operationModule = function () {
                                 // set key-value-pair
                                 keyValuePairJson[childInputKey] = childInputValue;
                             } else {
+                                keyValuePairJson = {};
                                 // set key-value-pair
                                 keyValuePairJson[childInputKey] = childInputValue;
                                 // push to value
@@ -1024,6 +1266,7 @@ var operationModule = function () {
                 operationData[key] = value;
             }
         );
+
         switch (platformType) {
             case platformTypeConstants["ANDROID"]:
                 payload = privateMethods.generateAndroidOperationPayload(operationCode, operationData, deviceList);
@@ -1197,7 +1440,27 @@ var operationModule = function () {
         for (var i = 0; i < operationCodes.length; ++i) {
             var operationCode = operationCodes[i];
             var payload = publicMethods.generatePayload(platformType, operationCode, null);
-            generatedProfile[operationCode] = payload["operation"];
+
+            if(platformType == platformTypeConstants["ANDROID"] &&
+                operationCodes[i] == androidOperationConstants["CAMERA_OPERATION_CODE"]){
+                var operations = payload["operation"];
+                for (var key in operations){
+                    operationCode = key;
+                    var restriction = false;
+                    if(operations[key]){
+                        restriction = true;
+                    }
+                    var payloadResult = {
+                        "operation": {
+                            "enabled" : restriction
+                        }
+                    };
+                    generatedProfile[operationCode] = payloadResult["operation"];
+                }
+
+            } else {
+                generatedProfile[operationCode] = payload["operation"];
+            }
         }
         return generatedProfile;
     };
@@ -1211,13 +1474,124 @@ var operationModule = function () {
      */
     publicMethods.populateProfile = function (platformType, payload) {
         var i, configuredOperations = [];
+        var restrictions = {};
         for (i = 0; i < payload.length; ++i) {
             var configuredFeature = payload[i];
             var featureCode = configuredFeature["featureCode"];
             var operationPayload = configuredFeature["content"];
+            if(platformType == platformTypeConstants["ANDROID"]){
+                var restriction  = JSON.parse(operationPayload);
+                if(featureCode == androidOperationConstants["CAMERA_OPERATION_CODE"]){
+                    restrictions["cameraEnabled"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_ADJUST_VOLUME"]){
+                    restrictions["disallowAdjustVolumeEnabled"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CONFIG_BLUETOOTH"]){
+                    restrictions["disallowConfigBluetooth"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CONFIG_CELL_BROADCASTS"]){
+                    restrictions["disallowConfigCellBroadcasts"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CONFIG_CREDENTIALS"]){
+                    restrictions["disallowConfigCredentials"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CONFIG_MOBILE_NETWORKS"]){
+                    restrictions["disallowConfigMobileNetworks"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CONFIG_TETHERING"]){
+                    restrictions["disallowConfigTethering"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CONFIG_VPN"]){
+                    restrictions["disallowConfigVpn"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CONFIG_WIFI"]){
+                    restrictions["disallowConfigWifi"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_APPS_CONTROL"]){
+                    restrictions["disallowAppControl"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CREATE_WINDOWS"]){
+                    restrictions["disallowCreateWindows"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_CROSS_PROFILE_COPY_PASTE"]){
+                    restrictions["disallowCrossProfileCopyPaste"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_DEBUGGING_FEATURES"]){
+                    restrictions["disallowDebugging"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_FACTORY_RESET"]){
+                    restrictions["disallowFactoryReset"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_ADD_USER"]){
+                    restrictions["disallowAddUser"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_INSTALL_APPS"]){
+                    restrictions["disallowInstallApps"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_INSTALL_UNKNOWN_SOURCES"]){
+                    restrictions["disallowInstallUnknownSources"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_MODIFY_ACCOUNTS"]){
+                    restrictions["disallowModifyAccounts"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_MOUNT_PHYSICAL_MEDIA"]){
+                    restrictions["disallowMountPhysicalMedia"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_NETWORK_RESET"]){
+                    restrictions["disallowNetworkReset"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_OUTGOING_BEAM"]){
+                    restrictions["disallowOutgoingBeam"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_OUTGOING_CALLS"]){
+                    restrictions["disallowOutgoingCalls"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_REMOVE_USER"]){
+                    restrictions["disallowRemoveUser"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_SAFE_BOOT"]){
+                    restrictions["disallowSafeBoot"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_SHARE_LOCATION"]){
+                    restrictions["disallowLocationSharing"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_SMS"]){
+                    restrictions["disallowSMS"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_UNINSTALL_APPS"]){
+                    restrictions["disallowUninstallApps"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_UNMUTE_MICROPHONE"]){
+                    restrictions["disallowUnmuteMicrophone"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["DISALLOW_USB_FILE_TRANSFER"]){
+                    restrictions["disallowUSBFileTransfer"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["ALLOW_PARENT_PROFILE_APP_LINKING"]){
+                    restrictions["disallowParentProfileAppLinking"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["ENSURE_VERIFY_APPS"]){
+                    restrictions["ensureVerifyApps"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["AUTO_TIME"]){
+                    restrictions["enableAutoTime"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["SET_SCREEN_CAPTURE_DISABLED"]){
+                    restrictions["diableScreenCapture"] = restriction["enabled"];
+                    continue;
+                } else if (featureCode == androidOperationConstants["SET_STATUS_BAR_DISABLED"]){
+                    restrictions["disableStatusBar"] = restriction["enabled"];
+                    continue;
+                }
+            }
             //push the feature-code to the configuration array
             configuredOperations.push(featureCode);
             publicMethods.populateUI(platformType, featureCode, operationPayload);
+        }
+        if(restrictions){
+            configuredOperations.push(androidOperationConstants["CAMERA_OPERATION_CODE"]);
+            publicMethods.populateUI(platformType, androidOperationConstants["CAMERA_OPERATION_CODE"], JSON.stringify(restrictions));
         }
         return configuredOperations;
     };

@@ -24,6 +24,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.telephony.PhoneStateListener;
+import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.util.Log;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,8 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  Network statistics such as connection type and signal details can be fetched
- *  from this class.
+ * Network statistics such as connection type and signal details can be fetched
+ * from this class.
  */
 public class DeviceNetworkStatus extends PhoneStateListener {
 
@@ -45,11 +46,13 @@ public class DeviceNetworkStatus extends PhoneStateListener {
     Context context;
     WifiManager wifiManager;
     private ObjectMapper mapper;
+    NetworkInfo info;
     private static final String TAG = DeviceNetworkStatus.class.getName();
 
     public DeviceNetworkStatus(Context context) {
         this.context = context;
         wifiManager = (WifiManager) this.context.getSystemService(Context.WIFI_SERVICE);
+        info = getNetworkInfo(this.context);
         mapper = new ObjectMapper();
     }
 
@@ -76,6 +79,14 @@ public class DeviceNetworkStatus extends PhoneStateListener {
         this.cellSignalStrength = cellSignalStrength;
     }
 
+    public boolean isConnectedMobile() {
+        info = getNetworkInfo(this.context);
+        if (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_MOBILE) {
+            return true;
+        }
+        return false;
+    }
+
     private NetworkInfo getNetworkInfo(Context context) {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -84,50 +95,54 @@ public class DeviceNetworkStatus extends PhoneStateListener {
 
     /**
      * Network data such as  connection type and signal details can be fetched with this method.
+     *
      * @return String representing network details.
      * @throws AndroidAgentException
      */
     public String getNetworkStatus() throws AndroidAgentException {
-        NetworkInfo info = getNetworkInfo(context);
-        List<Device.Property> properties = new ArrayList<>();
-        Device.Property property = new Device.Property();
-        property.setName(Constants.Device.CONNECTION_TYPE);
-        property.setValue(info.getTypeName());
-        properties.add(property);
+        info = getNetworkInfo(this.context);
+        String payload = null;
+        if(info != null) {
+            List<Device.Property> properties = new ArrayList<>();
+            Device.Property property = new Device.Property();
+            property.setName(Constants.Device.CONNECTION_TYPE);
+            property.setValue(info.getTypeName());
+            properties.add(property);
 
-        if ((info.isConnected())) {
-            if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
-                property = new Device.Property();
-                property.setName(Constants.Device.MOBILE_CONNECTION_TYPE);
-                property.setValue(info.getSubtypeName());
-                properties.add(property);
+            if ((info.isConnected())) {
+                if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
+                    property = new Device.Property();
+                    property.setName(Constants.Device.MOBILE_CONNECTION_TYPE);
+                    property.setValue(info.getSubtypeName());
+                    properties.add(property);
+                }
+                if (info.getType() == ConnectivityManager.TYPE_WIFI) {
+                    property = new Device.Property();
+                    property.setName(Constants.Device.WIFI_SSID);
+                    // NetworkInfo API of Android seem to add extra "" to SSID, therefore escaping it.
+                    property.setValue(String.valueOf(getWifiSSID()).replaceAll("\"", ""));
+                    properties.add(property);
+
+                    property = new Device.Property();
+                    property.setName(Constants.Device.WIFI_SIGNAL_STRENGTH);
+                    property.setValue(String.valueOf(getWifiSignalStrength()));
+                    properties.add(property);
+
+                }
             }
-            if (info.getType() == ConnectivityManager.TYPE_WIFI) {
-                property = new Device.Property();
-                property.setName(Constants.Device.WIFI_SSID);
-                // NetworkInfo API of Android seem to add extra "" to SSID, therefore escaping it.
-                property.setValue(String.valueOf(getWifiSSID()).replaceAll("\"", ""));
-                properties.add(property);
+            property = new Device.Property();
+            property.setName(Constants.Device.MOBILE_SIGNAL_STRENGTH);
+            property.setValue(String.valueOf(getCellSignalStrength()));
+            properties.add(property);
 
-                property = new Device.Property();
-                property.setName(Constants.Device.WIFI_SIGNAL_STRENGTH);
-                property.setValue(String.valueOf(getWifiSignalStrength()));
-                properties.add(property);
-
+            try {
+                payload = mapper.writeValueAsString(properties);
+            } catch (JsonProcessingException e) {
+                String errorMsg = "Error occurred while parsing " +
+                                  "network property property object to json.";
+                Log.e(TAG, errorMsg, e);
+                throw new AndroidAgentException(errorMsg, e);
             }
-        }
-        property = new Device.Property();
-        property.setName(Constants.Device.MOBILE_SIGNAL_STRENGTH);
-        property.setValue(String.valueOf(getCellSignalStrength()));
-        properties.add(property);
-        String payload;
-        try {
-            payload = mapper.writeValueAsString(properties);
-        } catch (JsonProcessingException e) {
-            String errorMsg = "Error occurred while parsing " +
-                              "network property property object to json.";
-            Log.e(TAG, errorMsg, e);
-            throw new AndroidAgentException(errorMsg, e);
         }
         return payload;
     }
@@ -142,13 +157,6 @@ public class DeviceNetworkStatus extends PhoneStateListener {
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         return wifiInfo.getSSID();
     }
-
-
-//    DeviceNetworkStatus deviceNetworkStatus = new DeviceNetworkStatus();
-//    if(deviceNetworkStatus.isConnectedMobile()){
-//    telephonyManager = (TelephonyManager)getActivity().getSystemService(Context.TELEPHONY_SERVICE);
-//    telephonyManager.listen(deviceNetworkStatus,PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-//    }
 
 
 }

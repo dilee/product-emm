@@ -80,6 +80,13 @@
     </Permission>
 
     <Permission>
+        <name>Unlock</name>
+        <path>/device-mgt/emm-admin/operations/android/unlock</path>
+        <url>/operation/unlock</url>
+        <method>POST</method>
+    </Permission>
+
+    <Permission>
         <name>Mute</name>
         <path>/device-mgt/emm-admin/operations/android/mute</path>
         <url>/operation/mute</url>
@@ -167,6 +174,13 @@
         <name>Upgrade Firmware</name>
         <path>/device-mgt/emm-admin/operations/android/upgrade-firmware</path>
         <url>/operation/upgrade-firmware</url>
+        <method>POST</method>
+    </Permission>
+
+    <Permission>
+        <name>Configure VPN</name>
+        <path>/device-mgt/emm-admin/operations/android/vpn</path>
+        <url>/operation/vpn</url>
         <method>POST</method>
     </Permission>
 
@@ -340,6 +354,12 @@
         <path>/device-mgt/emm-admin/platform-configs/modify</path>
         <url>/configuration</url>
         <method>PUT</method>
+    </Permission>
+    <Permission>
+        <name>Event Addition</name>
+        <path>/device-mgt/emm-admin/events/add</path>
+        <url>/events</url>
+        <method>POST</method>
     </Permission>
 
 </PermissionConfiguration>

@@ -26,6 +26,21 @@
     },
     "deviceIDs": []
   },
+  "upgrade-firmware" : {
+      "operation": {
+        "schedule": "schedule"
+      },
+      "deviceIDs": []
+    },
+  "vpn" : {
+    "operation": {
+      "serverAddress": "serverAddress",
+      "serverPort": "serverPort",
+      "sharedSecret": "sharedSecret",
+      "dnsServer": "dnsServer"
+    },
+    "deviceIDs": []
+  },
   "wifi" : {
     "operation": {
       "ssid": "ssid",
@@ -62,6 +77,13 @@
       "identity": "identity",
       "title": "title",
       "type": "install"
+    },
+    "deviceIDs": []
+  },
+  "lock" : {
+    "operation": {
+      "message": "message",
+      "isHardLockEnabled": true
     },
     "deviceIDs": []
   }

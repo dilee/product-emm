@@ -53,9 +53,19 @@ public class DeviceStartupIntentReceiver extends BroadcastReceiver {
 	 */
 	private void setRecurringAlarm(Context context) {
 		this.resources = context.getApplicationContext().getResources();
-		String mode =
-				Preference
-						.getString(context, resources.getString(R.string.shared_pref_notifier));
+		String mode = Preference.getString(context, Constants.PreferenceFlag.NOTIFIER_TYPE);
+		boolean isLocked = Preference.getBoolean(context, Constants.IS_LOCKED);
+		String lockMessage = Preference.getString(context, Constants.LOCK_MESSAGE);
+
+		if (lockMessage == null || lockMessage.isEmpty()) {
+			lockMessage = resources.getString(R.string.txt_lock_activity);
+		}
+
+		if (isLocked) {
+			Operation operation = new Operation(context);
+			operation.enableHardLock(lockMessage);
+		}
+
 		int interval = Preference.getInt(context, context.getResources().getString(R.string.shared_pref_frequency));
 		if(interval == DEFAULT_INDEX){
 			interval = DEFAULT_INTERVAL;
