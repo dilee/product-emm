@@ -23,7 +23,7 @@ package org.wso2.carbon.mdm.services.android.util;
  */
 public final class AndroidConstants {
 
-	public final class DeviceProperties{
+	public final class DeviceProperties {
 		private DeviceProperties() {
 			throw new AssertionError();
 		}
@@ -31,13 +31,13 @@ public final class AndroidConstants {
 		public static final String PROPERTY_DEVICE_KEY = "device";
 	}
 
-	public final class DeviceFeatures{
+	public final class DeviceFeatures {
 		private DeviceFeatures() {
 			throw new AssertionError();
 		}
 	}
 
-	public final class DeviceConstants{
+	public final class DeviceConstants {
 		private DeviceConstants() {
 			throw new AssertionError();
 		}
@@ -52,7 +52,7 @@ public final class AndroidConstants {
 				"Issue in retrieving device management service instance for device found at %s";
 	}
 
-	public final class Messages{
+	public final class Messages {
 		private Messages(){
 			throw new AssertionError();
 		}
@@ -60,7 +60,7 @@ public final class AndroidConstants {
 				"Device Manager service not available";
 	}
 
-	public final class OperationCodes{
+	public final class OperationCodes {
 		private OperationCodes(){
 			throw new AssertionError();
 		}
@@ -92,14 +92,14 @@ public final class AndroidConstants {
 		public static final String WORK_PROFILE = "WORK_PROFILE";
     }
 
-	public final class StatusCodes{
+	public final class StatusCodes {
 		private StatusCodes(){
 			throw new AssertionError();
 		}
 		public static final int MULTI_STATUS_HTTP_CODE = 207;
 	}
 
-	public final class TenantConfigProperties{
+	public final class TenantConfigProperties {
 		private TenantConfigProperties(){
 			throw new AssertionError();
 		}
@@ -118,4 +118,14 @@ public final class AndroidConstants {
         public static final String VERSION = "version";
         public static final String ICON = "icon";
     }
+
+	public final class SCEPContentTypes {
+		private SCEPContentTypes(){
+			throw new AssertionError();
+		}
+		public static final String X_PKI_MESSAGE = "application/x-pki-message";
+		public static final String X_X509_CA_CERT = "application/x-x509-ca-cert";
+		public static final String X_X509_CA_RA_CERT = "application/x-x509-ca-ra-cert";
+	}
+
 }

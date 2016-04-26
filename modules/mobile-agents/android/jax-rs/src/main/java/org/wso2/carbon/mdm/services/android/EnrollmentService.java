@@ -20,22 +20,26 @@ package org.wso2.carbon.mdm.services.android;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.certificate.mgt.core.dto.SCEPResponse;
+import org.wso2.carbon.certificate.mgt.core.exception.KeystoreException;
+import org.wso2.carbon.certificate.mgt.core.service.CertificateManagementService;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.DeviceManagementConstants;
 import org.wso2.carbon.device.mgt.common.DeviceManagementException;
 import org.wso2.carbon.mdm.services.android.exception.AndroidAgentException;
 import org.wso2.carbon.mdm.services.android.util.AndroidAPIUtils;
+import org.wso2.carbon.mdm.services.android.util.AndroidConstants;
 import org.wso2.carbon.mdm.services.android.util.Message;
 
-import javax.jws.WebService;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
 
 /**
  * Android Device Enrollment REST-API implementation.
  * All end points supports JSON, XMl with content negotiation.
  */
-@WebService
 @Produces({ "application/json", "application/xml" })
 @Consumes({ "application/json", "application/xml" })
 public class EnrollmentService {
@@ -153,4 +157,115 @@ public class EnrollmentService {
 		}
 		return responseMsg;
 	}
+
+	@GET
+	@Path("/scep")
+    public Response scepRequest(@QueryParam("operation") String operation, @QueryParam("message") String message)
+            throws AndroidAgentException {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Invoking SCEP operation " + operation);
+        }
+
+        if (SCEPOperation.GET_CA_CERT.getValue().equals(operation)) {
+
+            if (log.isDebugEnabled()) {
+                log.debug("Invoking GetCACert");
+            }
+
+            try {
+                CertificateManagementService certificateManagementService = AndroidAPIUtils.
+                        getCertificateManagementService();
+                SCEPResponse scepResponse = certificateManagementService.getCACertSCEP();
+                Response.ResponseBuilder responseBuilder;
+
+                switch (scepResponse.getResultCriteria()) {
+                    case CA_CERT_FAILED:
+                        log.error("CA cert failed");
+                        responseBuilder = Response.serverError();
+                        break;
+                    case CA_CERT_RECEIVED:
+
+                        if (log.isDebugEnabled()) {
+                            log.debug("CA certificate received in GetCACert");
+                        }
+
+                        responseBuilder = Response.ok(scepResponse.getEncodedResponse(), AndroidConstants.
+                                SCEPContentTypes.X_X509_CA_CERT);
+                        break;
+                    case CA_RA_CERT_RECEIVED:
+
+                        if (log.isDebugEnabled()) {
+                            log.debug("CA and RA certificates received in GetCACert");
+                        }
+
+                        responseBuilder = Response.ok(scepResponse.getEncodedResponse(), AndroidConstants.
+                                SCEPContentTypes.X_X509_CA_RA_CERT);
+                        break;
+                    default:
+                        log.error("Invalid SCEP request");
+                        responseBuilder = Response.serverError();
+                        break;
+                }
+
+                return responseBuilder.build();
+            } catch (AndroidAgentException e) {
+                log.error("Error occurred while enrolling the Android device", e);
+            } catch (KeystoreException e) {
+                log.error("Keystore error occurred while enrolling the Android device", e);
+            }
+
+        } else if (SCEPOperation.GET_CA_CAPS.getValue().equals(operation)) {
+
+            if (log.isDebugEnabled()) {
+                log.debug("Invoking GetCACaps");
+            }
+
+            try {
+                CertificateManagementService certificateManagementService = AndroidAPIUtils.
+                        getCertificateManagementService();
+                byte caCaps[] = certificateManagementService.getCACapsSCEP();
+
+                return Response.ok(caCaps, MediaType.TEXT_PLAIN).build();
+            } catch (AndroidAgentException e) {
+                log.error("Error occurred while enrolling the Android device", e);
+            }
+
+        } else {
+            log.error("Invalid SCEP operation " + operation);
+        }
+        return Response.serverError().build();
+    }
+
+	@POST
+	@Consumes({AndroidConstants.SCEPContentTypes.X_PKI_MESSAGE})
+	@Path("/scep")
+	public Response scepRequestPost(@QueryParam("operation") String operation, InputStream inputStream) {
+
+		if (log.isDebugEnabled()) {
+			log.debug("Invoking SCEP operation " + operation);
+		}
+
+		if (SCEPOperation.PKI_OPERATION.getValue().equals(operation)) {
+
+			if (log.isDebugEnabled()) {
+				log.debug("Invoking PKIOperation");
+			}
+
+			try {
+				CertificateManagementService certificateManagementService = AndroidAPIUtils.
+						getCertificateManagementService();
+				byte pkiMessage[] = certificateManagementService.getPKIMessageSCEP(inputStream);
+
+				return Response.ok(pkiMessage, AndroidConstants.SCEPContentTypes.X_PKI_MESSAGE).build();
+			} catch (AndroidAgentException e) {
+				log.error("Error occurred while enrolling the Android device", e);
+			} catch (KeystoreException e) {
+				log.error("Keystore error occurred while enrolling the Android device", e);
+			}
+
+		}
+		return Response.serverError().build();
+	}
+
 }

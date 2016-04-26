@@ -41,6 +41,7 @@ import org.wso2.carbon.device.mgt.core.search.mgt.impl.Utils;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.mobile.impl.android.gcm.GCMService;
 import org.wso2.carbon.mdm.services.android.bean.property.DeviceInfo;
+import org.wso2.carbon.mdm.services.android.exception.AndroidAgentException;
 import org.wso2.carbon.policy.mgt.common.monitor.PolicyComplianceException;
 import org.wso2.carbon.policy.mgt.core.PolicyManagerService;
 
@@ -138,7 +139,6 @@ public class AndroidAPIUtils {
         return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.CREATED).
                 type(responseMediaType).build();
     }
-
 
     public static PolicyManagerService getPolicyManagerService() {
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
@@ -252,7 +252,6 @@ public class AndroidAPIUtils {
         getApplicationManagerService().updateApplicationListInstalledInDevice(deviceIdentifier, applications);
     }
 
-
     private static void updateDeviceLocation(DeviceLocation deviceLocation) throws DeviceDetailsMgtException {
 
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
@@ -261,7 +260,6 @@ public class AndroidAPIUtils {
 
         informationManager.addDeviceLocation(deviceLocation);
     }
-
 
     private static void updateDeviceInfo(org.wso2.carbon.device.mgt.common.device.details.DeviceInfo deviceInfo)
             throws DeviceDetailsMgtException {
@@ -272,7 +270,6 @@ public class AndroidAPIUtils {
 
         informationManager.addDeviceInfo(deviceInfo);
     }
-
 
     private static org.wso2.carbon.device.mgt.common.device.details.DeviceInfo convertDeviceToInfo(Device device) {
 
@@ -338,19 +335,31 @@ public class AndroidAPIUtils {
         return "";
     }
 
-    public static CertificateManagementService getCertificateManagementService() {
+    public static CertificateManagementService getCertificateManagementService() throws AndroidAgentException {
 
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
         CertificateManagementService certificateManagementService = (CertificateManagementService)
                 ctx.getOSGiService(CertificateManagementService.class, null);
 
+        if (certificateManagementService == null) {
+            String msg = "IOSEnrollmentService is not initialized";
+            log.error(msg);
+            throw new AndroidAgentException(msg);
+        }
+
         return certificateManagementService;
     }
 
-    public static SCEPManager getSCEPManager() {
+    public static SCEPManager getSCEPManager() throws AndroidAgentException {
 
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
         SCEPManager scepManager = (SCEPManager) ctx.getOSGiService(SCEPManager.class, null);
+
+        if (scepManager == null) {
+            String msg = "SCEPManager is not initialized";
+            log.error(msg);
+            throw new AndroidAgentException(msg);
+        }
 
         return scepManager;
     }
