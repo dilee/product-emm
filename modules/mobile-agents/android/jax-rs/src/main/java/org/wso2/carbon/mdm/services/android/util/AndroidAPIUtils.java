@@ -21,6 +21,7 @@ package org.wso2.carbon.mdm.services.android.util;
 import com.google.gson.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.certificate.mgt.core.service.CertificateManagementService;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
@@ -35,6 +36,7 @@ import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementExcept
 import org.wso2.carbon.device.mgt.core.app.mgt.ApplicationManagementProviderService;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceInformationManager;
+import org.wso2.carbon.device.mgt.core.scep.SCEPManager;
 import org.wso2.carbon.device.mgt.core.search.mgt.impl.Utils;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.mobile.impl.android.gcm.GCMService;
@@ -323,16 +325,33 @@ public class AndroidAPIUtils {
 
         boolean exist = false;
         for (JsonElement element : jsonArray) {
-          //  if (((JsonObject) element).entrySet().iterator().next().getValue().getAsString().equalsIgnoreCase(needed));
-            for (Map.Entry<String, JsonElement> ob : ((JsonObject) element).entrySet()){
-                if(exist){
+            //  if (((JsonObject) element).entrySet().iterator().next().getValue().getAsString().equalsIgnoreCase(needed));
+            for (Map.Entry<String, JsonElement> ob : ((JsonObject) element).entrySet()) {
+                if (exist) {
                     return ob.getValue().getAsString().replace("%", "");
                 }
-                if(ob.getValue().getAsString().equalsIgnoreCase(needed)){
+                if (ob.getValue().getAsString().equalsIgnoreCase(needed)) {
                     exist = true;
                 }
             }
         }
         return "";
+    }
+
+    public static CertificateManagementService getCertificateManagementService() {
+
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        CertificateManagementService certificateManagementService = (CertificateManagementService)
+                ctx.getOSGiService(CertificateManagementService.class, null);
+
+        return certificateManagementService;
+    }
+
+    public static SCEPManager getSCEPManager() {
+
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        SCEPManager scepManager = (SCEPManager) ctx.getOSGiService(SCEPManager.class, null);
+
+        return scepManager;
     }
 }

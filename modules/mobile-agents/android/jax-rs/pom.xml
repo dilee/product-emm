@@ -173,5 +173,10 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
+        <!-- Certificate Management-->
+        <dependency>
+            <groupId>org.wso2.carbon.devicemgt</groupId>
+            <artifactId>org.wso2.carbon.certificate.mgt.core</artifactId>
+        </dependency>
     </dependencies>
 </project>
