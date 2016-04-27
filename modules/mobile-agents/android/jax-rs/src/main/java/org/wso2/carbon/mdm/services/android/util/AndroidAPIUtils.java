@@ -342,7 +342,7 @@ public class AndroidAPIUtils {
                 ctx.getOSGiService(CertificateManagementService.class, null);
 
         if (certificateManagementService == null) {
-            String msg = "IOSEnrollmentService is not initialized";
+            String msg = "AndroidEnrollmentService is not initialized";
             log.error(msg);
             throw new AndroidAgentException(msg);
         }
