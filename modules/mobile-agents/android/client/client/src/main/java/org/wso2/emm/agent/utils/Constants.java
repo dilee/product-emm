@@ -434,4 +434,15 @@ public class Constants {
 		public static final String APP_LIST = "appList";
 	}
 
+	// OMADM database related tables
+	public final class OMADMTable {
+		private OMADMTable() {
+			throw new AssertionError();
+		}
+		public static final String NAME = "omadmmo";
+		public static final String ID = "id";
+		public static final String MO_NAME = "moname";
+		public static final String VALUE = "value";
+	}
+
 }

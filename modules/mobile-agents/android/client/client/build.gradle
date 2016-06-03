@@ -57,6 +57,10 @@ dependencies {
     compile('com.googlecode.json-simple:json-simple:1.1.1') {
         exclude module: 'junit'
     }
+    compile('org.simpleframework:simple-xml:2.7.1') {
+        exclude group: 'stax', module: 'stax-api'
+        exclude group: 'xpp3', module: 'xpp3'
+    }
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
     compile 'com.actionbarsherlock:actionbarsherlock:4.4.0@aar'
     compile 'com.android.support:support-v4:23.1.1'
@@ -65,4 +69,5 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.0-rc3'
     compile 'org.bouncycastle:bcprov-jdk16:1.45'
     compile 'com.google.code.gson:gson:2.6.2'
+    compile 'org.apache.commons:commons-collections4:4.0'
 }
