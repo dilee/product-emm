@@ -18,17 +18,12 @@
 
 package org.wso2.emm.agent.omadm.dm.processors;
 
-import org.wso2.emm.agent.omadm.cachemanager.OMADMCacheManager;
-import org.wso2.emm.agent.omadm.cachemanager.beans.DMTreeOperationCacheEntry;
-import org.wso2.emm.agent.omadm.cachemanager.impl.OMADMCacheManagerImpl;
 import org.wso2.emm.agent.omadm.ddf.MgmtTreeManager;
 import org.wso2.emm.agent.omadm.ddf.impl.MgmtTreeManagerImpl;
 import org.wso2.emm.agent.omadm.dm.core.dmtree.beans.MgmtTree;
 import org.wso2.emm.agent.omadm.dm.core.dmtree.beans.Node;
 import org.wso2.emm.agent.omadm.dm.core.dmtree.parsers.URIParser;
 import org.wso2.emm.agent.omadm.dm.dao.DeviceMODao;
-import org.wso2.emm.agent.omadm.operations.OperationHandler;
-import org.wso2.emm.agent.omadm.operations.OperationAppender;
 import org.wso2.emm.agent.omadm.syncml.beans.*;
 import org.wso2.emm.agent.omadm.syncml.util.SyncMLConstants;
 import org.wso2.emm.agent.omadm.syncml.util.SyncMLStatusCodes;
@@ -43,7 +38,7 @@ public class SyncMLMessageProcessor {
 
     private SyncMLDocument sourceDocument;
     private SyncMLDocument responseDocument;
-    private DeviceMODao moDao = DeviceMODao.getInstance();
+    private DeviceMODao moDao = new DeviceMODao();
 
     private static final int HEADER_STATUS_COMMAND_ID = 1;
     private static final int HEADER_COMMAND_REF_ID = 0;
@@ -51,7 +46,7 @@ public class SyncMLMessageProcessor {
     // Kept as a counter to generate command IDs
     private int headerCommandId = HEADER_STATUS_COMMAND_ID;
 
-    private static Log log = LogFactory.getLog(SyncMLMessageProcessor.class);
+    private static final String TAG = SyncMLMessageProcessor.class.getSimpleName();
 
     public SyncMLMessageProcessor(SyncMLDocument document) {
         this.sourceDocument = document;
